@@ -207,3 +207,59 @@ object KafkaAvroToDataFrame {
 }
 
 
+
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.spark.sql.{SparkSession, Row, DataFrame}
+import org.apache.spark.sql.types.{StructType, StructField, StringType}
+import org.apache.spark.sql.avro.SchemaConverters
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
+import org.apache.avro.generic.GenericRecord
+import org.apache.avro.Schema
+
+object KafkaAvroToDataFrame {
+  def main(args: Array[String]): Unit = {
+    // Initialize SparkSession
+    val spark = SparkSession.builder()
+      .appName("KafkaToDataFrame")
+      .getOrCreate()
+
+    // Assuming you have the messageRdd already created
+    val messageRdd: org.apache.spark.rdd.RDD[ConsumerRecord[String, GenericRecord]] = ??? // Replace with your RDD initialization
+
+    // Schema Registry configurations
+    val schemaRegistryUrl = "http://localhost:8081"
+    val topicName = "your_topic_name"
+    val schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryUrl, 128)
+    val schemaMetadata = schemaRegistryClient.getLatestSchemaMetadata(s"$topicName-value")
+    val avroSchema = new Schema.Parser().parse(schemaMetadata.getSchema)
+    val sparkSchema = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]
+
+    // Convert GenericRecord to Row within a serializable object
+    object GenericRecordConverter extends Serializable {
+      def genericRecordToRow(record: GenericRecord, schema: Schema): Row = {
+        val values = schema.getFields.toArray.map { field =>
+          val fieldName = field.asInstanceOf[Schema.Field].name()
+          record.get(fieldName) match {
+            case utf8: org.apache.avro.util.Utf8 => utf8.toString
+            case other => other
+          }
+        }
+        Row(values: _*)
+      }
+    }
+
+    // Convert RDD[ConsumerRecord[String, GenericRecord]] to RDD[Row]
+    val rowRDD = messageRdd.map(record => GenericRecordConverter.genericRecordToRow(record.value(), avroSchema))
+
+    // Create DataFrame
+    val df = spark.createDataFrame(rowRDD, sparkSchema)
+
+    // Show the DataFrame
+    df.show()
+
+    // Stop the SparkSession
+    spark.stop()
+  }
+}
+
+
