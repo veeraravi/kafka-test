@@ -263,3 +263,97 @@ object KafkaAvroToDataFrame {
 }
 
 
+//-------
+
+
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.spark.sql.{SparkSession, Row, DataFrame}
+import org.apache.spark.sql.types.{StructType}
+import org.apache.spark.sql.avro.SchemaConverters
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
+import org.apache.avro.generic.GenericRecord
+import org.apache.avro.Schema
+import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange, KafkaUtils}
+import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
+import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
+import org.apache.kafka.common.serialization.StringDeserializer
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
+import org.apache.spark.SparkContext
+
+object KafkaAvroToDataFrame {
+  def main(args: Array[String]): Unit = {
+    // Initialize SparkSession
+    val spark = SparkSession.builder()
+      .appName("KafkaToDataFrame")
+      .getOrCreate()
+
+    val sc = spark.sparkContext
+
+    // Kafka parameters
+    val kafkaParams = Map[String, Object](
+      "bootstrap.servers" -> "localhost:9092",
+      "key.deserializer" -> classOf[StringDeserializer],
+      "value.deserializer" -> classOf[KafkaAvroDeserializer],
+      "schema.registry.url" -> "http://localhost:8081",
+      "group.id" -> "your_group_id",
+      "specific.avro.reader" -> "false",
+      "auto.offset.reset" -> "earliest",
+      "enable.auto.commit" -> (false: java.lang.Boolean)
+    )
+
+    // Define the topic and offset ranges
+    val topics = Array("your_topic_name")
+    val offsetRanges = Array(
+      OffsetRange("your_topic_name", 0, 0, 100) // Replace with actual offset ranges
+    )
+
+    // Create RDD from Kafka
+    val kafkaRDD = KafkaUtils.createRDD[String, GenericRecord](
+      sc,
+      kafkaParams,
+      offsetRanges,
+      PreferConsistent
+    )
+
+    // Schema Registry configurations
+    val schemaRegistryUrl = "http://localhost:8081"
+    val topicName = "your_topic_name"
+    val schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryUrl, 128)
+    val schemaMetadata = schemaRegistryClient.getLatestSchemaMetadata(s"$topicName-value")
+    val avroSchema = new Schema.Parser().parse(schemaMetadata.getSchema)
+    val sparkSchema = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]
+
+    // Convert GenericRecord to Row within a serializable object
+    object GenericRecordConverter extends Serializable {
+      def genericRecordToRow(record: GenericRecord, schema: Schema): Row = {
+        val values = schema.getFields.toArray.map { field =>
+          val fieldName = field.asInstanceOf[Schema.Field].name()
+          record.get(fieldName) match {
+            case utf8: org.apache.avro.util.Utf8 => utf8.toString
+            case other => other
+          }
+        }
+        Row(values: _*)
+      }
+    }
+
+    // Debug: Print messages to verify deserialization
+    kafkaRDD.foreach { message =>
+      println(s"Key: ${message.key()}, Value: ${message.value()}")
+    }
+
+    // Convert RDD[ConsumerRecord[String, GenericRecord]] to RDD[Row]
+    val rowRDD = kafkaRDD.map(record => GenericRecordConverter.genericRecordToRow(record.value(), avroSchema))
+
+    // Create DataFrame
+    val df = spark.createDataFrame(rowRDD, sparkSchema)
+
+    // Show the DataFrame
+    df.show()
+
+    // Stop the SparkSession
+    spark.stop()
+  }
+}
+
+
