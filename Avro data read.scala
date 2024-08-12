@@ -357,3 +357,27 @@ object KafkaAvroToDataFrame {
 }
 
 
+
+
+
+
+// Define the string containing special characters separated by '|'
+val specialCharsString = ",|#|#|*|\\|$"
+
+// Convert the string to a list of characters
+val specialCharsList = specialCharsString.split("\\|").toList
+
+// Create a regex pattern from the special characters
+val pattern = specialCharsList.map("\\Q" + _ + "\\E").mkString("|").r
+
+// Define the input string where you want to replace these characters
+val inputString = "Hello, World! Welcome to Scala #1 with *special* characters\\$"
+
+// Replace each occurrence of the special characters with '@'
+val resultString = pattern.replaceAllIn(inputString, "@")
+
+// Print the result
+println(resultString)
+
+
+
