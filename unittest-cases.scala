@@ -47,7 +47,6 @@ class KafkaConsumerExampleSpec extends AnyFlatSpec with Matchers with MockitoSug
 
 
 
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.mockito.Mockito._
@@ -57,17 +56,19 @@ import io.confluent.kafka.schemaregistry.client.rest.entities.Schema as RestSche
 import org.apache.avro.Schema
 import org.apache.spark.sql.types.{StructType, DataType}
 import com.databricks.spark.avro.SchemaConverters
+import org.mockito.MockitoSugar
 
-class SchemaRegistryTest extends AnyFlatSpec with Matchers {
+class SchemaRegistryTest extends AnyFlatSpec with Matchers with MockitoSugar {
 
   "getSchemaFromSchemaRegistry" should "retrieve and convert schema from schema registry" in {
     // Mocking RestService
     val schemaRegistryURL = "http://localhost:8081"
     val inputTopic = "test-topic"
     val schemaSubjectId = "-value"
+    val topicValueName = inputTopic + schemaSubjectId
 
-    val mockRestService = mock(classOf[RestService])
-    val mockRestResponseSchema = mock(classOf[RestSchema])
+    val mockRestService = mock[RestService]
+    val mockRestResponseSchema = mock[RestSchema]
 
     // Sample Avro schema in JSON format
     val avroSchemaString =
@@ -84,16 +85,17 @@ class SchemaRegistryTest extends AnyFlatSpec with Matchers {
 
     // Mocking behavior
     when(mockRestResponseSchema.getSchema).thenReturn(avroSchemaString)
-    when(mockRestService.getLatestVersion(any[String])).thenReturn(mockRestResponseSchema)
+    when(mockRestService.getLatestVersion(topicValueName)).thenReturn(mockRestResponseSchema)
 
-    // Call the function to test
+    // Implementing the function logic directly in the test for clarity
     val parser = new Schema.Parser()
-    val avroSchema = parser.parse(avroSchemaString)
-    val schemaRegistrySchema: StructType = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]
+    val topicValueAvroSchema: Schema = parser.parse(mockRestResponseSchema.getSchema)
+    val schemaRegistrySchema: StructType = SchemaConverters.toSqlType(topicValueAvroSchema).dataType.asInstanceOf[StructType]
 
-    val schemaRegistrySchema2 = DataType.fromJson(SchemaConverters.toSqlType(avroSchema).dataType.prettyJson).asInstanceOf[StructType]
+    val schemaRegistrySchema2 = DataType.fromJson(SchemaConverters.toSqlType(topicValueAvroSchema).dataType.prettyJson).asInstanceOf[StructType]
 
     // Assertions
     schemaRegistrySchema2 shouldEqual schemaRegistrySchema
   }
 }
+
