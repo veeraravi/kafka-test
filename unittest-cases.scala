@@ -167,3 +167,65 @@ class SchemaRegistryTest extends AnyFlatSpec with Matchers with MockitoSugar {
 
   cleanup("test_output/bad_records") // Call cleanup after tests
 
+
+
+
+
+
+
+// Create a mock SparkSession
+  val spark: SparkSession = mock[SparkSession]
+
+  // Create a mock DataFrame
+  val df: DataFrame = mock[DataFrame]
+  val filteredDf: DataFrame = mock[DataFrame]
+
+  // Sample test constants
+  val badRecordTargetLoc = "mock/path/to/bad_records"
+  val badRecordCondition = "mock condition"
+
+  test("writeBadRecords should not write to disk if there are no bad records") {
+    // Mocking filter and persist behavior
+    when(df.filter(badRecordCondition)).thenReturn(filteredDf)
+    when(filteredDf.persist(StorageLevel.MEMORY_AND_DISK_SER)).thenReturn(filteredDf)
+    when(filteredDf.isEmpty).thenReturn(true)
+
+    // Call the method to test
+    WriteBadRecords.writeBadRecords(df, badRecordTargetLoc)
+
+    // Verify the interactions
+    verify(filteredDf, times(1)).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    verify(filteredDf, times(1)).isEmpty
+    verify(filteredDf, never()).write
+    verify(filteredDf, times(1)).unpersist()
+  }
+
+  test("writeBadRecords should write to disk if there are bad records") {
+    // Mocking filter and persist behavior
+    when(df.filter(badRecordCondition)).thenReturn(filteredDf)
+    when(filteredDf.persist(StorageLevel.MEMORY_AND_DISK_SER)).thenReturn(filteredDf)
+    when(filteredDf.isEmpty).thenReturn(false)
+
+    // Mock write behavior
+    val writeConfig = mock[DataFrameWriter[Row]]
+    when(filteredDf.write).thenReturn(writeConfig)
+    when(writeConfig.mode("append")).thenReturn(writeConfig)
+    when(writeConfig.json(badRecordTargetLoc)).thenReturn(writeConfig)
+
+    // Call the method to test
+    WriteBadRecords.writeBadRecords(df, badRecordTargetLoc)
+
+    // Verify the interactions
+    verify(filteredDf, times(1)).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    verify(filteredDf, times(1)).isEmpty
+    verify(filteredDf.write.mode("append"), times(1)).json(badRecordTargetLoc)
+    verify(filteredDf, times(1)).unpersist()
+  }
+
+
+
+
+
+
+
+
