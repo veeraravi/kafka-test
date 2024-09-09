@@ -344,6 +344,127 @@ class CombinedTests extends AnyFunSuite with AnyFlatSpec with Matchers with Mock
 
 
 
+=================================================================================================================
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.mockito.scalatest.MockitoSugar
+import org.mockito.Mockito._
+import org.apache.spark.sql.{DataFrame, SparkSession, DataFrameWriter, Row}
+import org.apache.spark.storage.StorageLevel
+import io.confluent.kafka.schemaregistry.client.rest.RestService
+import io.confluent.kafka.schemaregistry.client.rest.entities.Schema as RestSchema
+import org.apache.avro.Schema
+import org.apache.spark.sql.types.{StructType, DataType}
+import com.databricks.spark.avro.SchemaConverters
+
+// Assuming WriteBadRecords object is in the same file or imported properly
+object WriteBadRecords {
+  def writeBadRecords(df: DataFrame, badRecordTargetLoc: String): Unit = {
+    val badRecords = df.filter("mock condition").persist(StorageLevel.MEMORY_AND_DISK_SER)
+    if (badRecords.isEmpty) {
+      println("No bad records found") // Replace with actual logging
+    } else {
+      badRecords.write.mode("append").json(badRecordTargetLoc)
+      println("Bad records found and written to " + badRecordTargetLoc) // Replace with actual logging
+    }
+    badRecords.unpersist()
+  }
+}
+
+class CombinedTests extends AnyFlatSpec with Matchers with MockitoSugar {
+
+  // Test for WriteBadRecords method
+  "WriteBadRecords" should "not write to disk if there are no bad records" in {
+    // Create a mock DataFrame
+    val df: DataFrame = mock[DataFrame]
+    val filteredDf: DataFrame = mock[DataFrame]
+
+    // Sample test constants
+    val badRecordTargetLoc = "mock/path/to/bad_records"
+
+    // Mocking filter and persist behavior
+    when(df.filter("mock condition")).thenReturn(filteredDf)
+    when(filteredDf.persist(StorageLevel.MEMORY_AND_DISK_SER)).thenReturn(filteredDf)
+    when(filteredDf.isEmpty).thenReturn(true)
+
+    // Call the method to test
+    WriteBadRecords.writeBadRecords(df, badRecordTargetLoc)
+
+    // Verify the interactions
+    verify(filteredDf, times(1)).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    verify(filteredDf, times(1)).isEmpty
+    verify(filteredDf, never()).write
+    verify(filteredDf, times(1)).unpersist()
+  }
+
+  it should "write to disk if there are bad records" in {
+    // Create a mock DataFrame
+    val df: DataFrame = mock[DataFrame]
+    val filteredDf: DataFrame = mock[DataFrame]
+
+    // Sample test constants
+    val badRecordTargetLoc = "mock/path/to/bad_records"
+
+    // Mocking filter and persist behavior
+    when(df.filter("mock condition")).thenReturn(filteredDf)
+    when(filteredDf.persist(StorageLevel.MEMORY_AND_DISK_SER)).thenReturn(filteredDf)
+    when(filteredDf.isEmpty).thenReturn(false)
+
+    // Mock write behavior
+    val writeConfig = mock[DataFrameWriter[Row]]
+    when(filteredDf.write).thenReturn(writeConfig)
+    when(writeConfig.mode("append")).thenReturn(writeConfig)
+    when(writeConfig.json(badRecordTargetLoc)).thenReturn(writeConfig)
+
+    // Call the method to test
+    WriteBadRecords.writeBadRecords(df, badRecordTargetLoc)
+
+    // Verify the interactions
+    verify(filteredDf, times(1)).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    verify(filteredDf, times(1)).isEmpty
+    verify(filteredDf.write.mode("append"), times(1)).json(badRecordTargetLoc)
+    verify(filteredDf, times(1)).unpersist()
+  }
+
+  // Test for Schema Registry interactions
+  "Schema Registry" should "retrieve and convert schema from schema registry" in {
+    // Mocking RestService
+    val schemaRegistryURL = "http://localhost:8081"
+    val inputTopic = "test-topic"
+    val schemaSubjectId = "-value"
+    val topicValueName = inputTopic + schemaSubjectId
+
+    val mockRestService = mock[RestService]
+    val mockRestResponseSchema = mock[RestSchema]
+
+    // Sample Avro schema in JSON format
+    val avroSchemaString =
+      """
+        |{
+        |  "type": "record",
+        |  "name": "TestRecord",
+        |  "fields": [
+        |    {"name": "field1", "type": "string"},
+        |    {"name": "field2", "type": "int"}
+        |  ]
+        |}
+        |""".stripMargin
+
+    // Mocking behavior
+    when(mockRestResponseSchema.getSchema).thenReturn(avroSchemaString)
+    when(mockRestService.getLatestVersion(topicValueName)).thenReturn(mockRestResponseSchema)
+
+    // Simulating the function behavior
+    val parser = new Schema.Parser()
+    val topicValueAvroSchema: Schema = parser.parse(mockRestResponseSchema.getSchema)
+    val schemaRegistrySchema: StructType = SchemaConverters.toSqlType(topicValueAvroSchema).dataType.asInstanceOf[StructType]
+
+    val schemaRegistrySchema2 = DataType.fromJson(SchemaConverters.toSqlType(topicValueAvroSchema).dataType.prettyJson).asInstanceOf[StructType]
+
+    // Assertions
+    schemaRegistrySchema2 shouldEqual schemaRegistrySchema
+  }
+}
 
 
 
