@@ -43,3 +43,57 @@ class KafkaConsumerExampleSpec extends AnyFlatSpec with Matchers with MockitoSug
     verify(mockConsumer, times(2)).position(any[TopicPartition])
   }
 }
+
+
+
+
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
+import io.confluent.kafka.schemaregistry.client.rest.RestService
+import io.confluent.kafka.schemaregistry.client.rest.entities.Schema as RestSchema
+import org.apache.avro.Schema
+import org.apache.spark.sql.types.{StructType, DataType}
+import com.databricks.spark.avro.SchemaConverters
+
+class SchemaRegistryTest extends AnyFlatSpec with Matchers {
+
+  "getSchemaFromSchemaRegistry" should "retrieve and convert schema from schema registry" in {
+    // Mocking RestService
+    val schemaRegistryURL = "http://localhost:8081"
+    val inputTopic = "test-topic"
+    val schemaSubjectId = "-value"
+
+    val mockRestService = mock(classOf[RestService])
+    val mockRestResponseSchema = mock(classOf[RestSchema])
+
+    // Sample Avro schema in JSON format
+    val avroSchemaString =
+      """
+        |{
+        |  "type": "record",
+        |  "name": "TestRecord",
+        |  "fields": [
+        |    {"name": "field1", "type": "string"},
+        |    {"name": "field2", "type": "int"}
+        |  ]
+        |}
+        |""".stripMargin
+
+    // Mocking behavior
+    when(mockRestResponseSchema.getSchema).thenReturn(avroSchemaString)
+    when(mockRestService.getLatestVersion(any[String])).thenReturn(mockRestResponseSchema)
+
+    // Call the function to test
+    val parser = new Schema.Parser()
+    val avroSchema = parser.parse(avroSchemaString)
+    val schemaRegistrySchema: StructType = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]
+
+    val schemaRegistrySchema2 = DataType.fromJson(SchemaConverters.toSqlType(avroSchema).dataType.prettyJson).asInstanceOf[StructType]
+
+    // Assertions
+    schemaRegistrySchema2 shouldEqual schemaRegistrySchema
+  }
+}
