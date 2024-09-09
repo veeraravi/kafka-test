@@ -99,3 +99,71 @@ class SchemaRegistryTest extends AnyFlatSpec with Matchers with MockitoSugar {
   }
 }
 
+
+
+
+"writeBadRecords" should "write bad records (with nulls) to the specified location" in {
+    // Sample data for testing
+    val schema = StructType(
+      List(
+        StructField("id", IntegerType, nullable = true),
+        StructField("name", StringType, nullable = true)
+      )
+    )
+
+    val data = Seq(
+      Row(1, "Alice"),
+      Row(2, null),  // Bad record
+      Row(3, "Charlie"),
+      Row(null, "David")  // Bad record
+    )
+
+    val df = spark.createDataFrame(
+      spark.sparkContext.parallelize(data),
+      schema
+    )
+
+    // Temporary location for test output
+    val outputLocation = "test_output/bad_records"
+
+    // Call the method
+    writeBadRecords(df, outputLocation)
+
+    // Check if the output file is written and contains bad records
+    val outputPath = Paths.get(outputLocation)
+    assert(Files.exists(outputPath), "Output location does not exist")
+
+    // Read the written JSON file and validate the records
+    val outputFiles = Files.list(outputPath).toArray.map(_.toString).filter(_.endsWith(".json"))
+    assert(outputFiles.nonEmpty, "No output files found")
+
+    // Collect written records
+    val writtenRecords = outputFiles.flatMap { file =>
+      val bufferedSource = Source.fromFile(file)
+      val records = bufferedSource.getLines().toList
+      bufferedSource.close()
+      records
+    }
+
+    // Check that at least one bad record was written
+    writtenRecords should not be empty
+
+    // Define expected bad records
+    val expectedBadRecords = Seq("""{"id":2,"name":null}""", """{"id":null,"name":"David"}""")
+    
+    // Convert to Set for comparison as JSON serialization order of fields may differ
+    writtenRecords.toSet shouldEqual expectedBadRecords.toSet
+  }
+
+  // Cleanup after test
+  def cleanup(outputLocation: String): Unit = {
+    val outputPath = Paths.get(outputLocation)
+    if (Files.exists(outputPath)) {
+      Files.walk(outputPath)
+        .sorted((path1, path2) => path2.compareTo(path1))
+        .forEach(Files.delete)
+    }
+  }
+
+  cleanup("test_output/bad_records") // Call cleanup after tests
+
