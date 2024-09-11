@@ -1,0 +1,203 @@
+
+Deprecated Classes
+Class and Description
+org.apache.spark.ml.feature.ChiSqSelector
+use UnivariateFeatureSelector instead. Since 3.1.1.
+org.apache.spark.scheduler.SparkListenerExecutorBlacklisted
+use SparkListenerExecutorExcluded instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerExecutorBlacklistedForStage
+use SparkListenerExecutorExcludedForStage instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerExecutorUnblacklisted
+use SparkListenerExecutorUnexcluded instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerNodeBlacklisted
+use SparkListenerNodeExcluded instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerNodeBlacklistedForStage
+use SparkListenerNodeExcludedForStage instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerNodeUnblacklisted
+use SparkListenerNodeUnexcluded instead. Since 3.1.0.
+org.apache.spark.sql.expressions.javalang.typed
+As of release 3.0.0, please use the untyped builtin aggregate functions.
+org.apache.spark.sql.expressions.scalalang.typed
+please use untyped builtin aggregate functions. Since 3.0.0.
+org.apache.spark.sql.expressions.UserDefinedAggregateFunction
+UserDefinedAggregateFunction is deprecated. Aggregator[IN, BUF, OUT] should now be registered as a UDF via the functions.udaf(agg) method.
+Deprecated Fields
+Field and Description
+org.apache.spark.launcher.SparkLauncher.DEPRECATED_CHILD_CONNECTION_TIMEOUT
+use `CHILD_CONNECTION_TIMEOUT`
+Deprecated Methods
+Method and Description
+org.apache.spark.sql.SQLContext.applySchema(JavaRDD<?>, Class<?>)
+Use createDataFrame instead. Since 1.3.0.
+org.apache.spark.sql.SQLContext.applySchema(JavaRDD<Row>, StructType)
+Use createDataFrame instead. Since 1.3.0.
+org.apache.spark.sql.SQLContext.applySchema(RDD<?>, Class<?>)
+Use createDataFrame instead. Since 1.3.0.
+org.apache.spark.sql.SQLContext.applySchema(RDD<Row>, StructType)
+Use createDataFrame instead. Since 1.3.0.
+org.apache.spark.sql.functions.approxCountDistinct(Column)
+Use approx_count_distinct. Since 2.1.0.
+org.apache.spark.sql.functions.approxCountDistinct(Column, double)
+Use approx_count_distinct. Since 2.1.0.
+org.apache.spark.sql.functions.approxCountDistinct(String)
+Use approx_count_distinct. Since 2.1.0.
+org.apache.spark.sql.functions.approxCountDistinct(String, double)
+Use approx_count_distinct. Since 2.1.0.
+org.apache.spark.sql.functions.bitwiseNOT(Column)
+Use bitwise_not. Since 3.2.0.
+org.apache.spark.status.api.v1.ExecutorSummary.blacklistedInStages()
+use excludedInStages instead. Since 3.1.0.
+org.apache.spark.sql.connector.write.WriteBuilder.buildForBatch()
+use WriteBuilder.build() instead.
+org.apache.spark.sql.connector.write.WriteBuilder.buildForStreaming()
+use WriteBuilder.build() instead.
+org.apache.spark.sql.functions.callUDF(String, Seq<Column>)
+Use call_udf. Since .
+org.apache.spark.sql.SQLContext.clearActive()
+Use SparkSession.clearActiveSession instead. Since 2.0.0.
+org.apache.spark.ml.clustering.BisectingKMeansModel.computeCost(Dataset<?>)
+This method is deprecated and will be removed in future versions. Use ClusteringEvaluator instead. You can also get the cost on the training dataset in the summary.
+org.apache.spark.sql.SQLContext.createExternalTable(String, String)
+use sparkSession.catalog.createTable instead. Since 2.2.0.
+org.apache.spark.sql.catalog.Catalog.createExternalTable(String, String)
+use createTable instead. Since 2.2.0.
+org.apache.spark.sql.SQLContext.createExternalTable(String, String, Map<String, String>)
+use sparkSession.catalog.createTable instead. Since 2.2.0.
+org.apache.spark.sql.SQLContext.createExternalTable(String, String, Map<String, String>)
+use sparkSession.catalog.createTable instead. Since 2.2.0.
+org.apache.spark.sql.catalog.Catalog.createExternalTable(String, String, Map<String, String>)
+use createTable instead. Since 2.2.0.
+org.apache.spark.sql.catalog.Catalog.createExternalTable(String, String, Map<String, String>)
+use createTable instead. Since 2.2.0.
+org.apache.spark.sql.SQLContext.createExternalTable(String, String, String)
+use sparkSession.catalog.createTable instead. Since 2.2.0.
+org.apache.spark.sql.catalog.Catalog.createExternalTable(String, String, String)
+use createTable instead. Since 2.2.0.
+org.apache.spark.sql.SQLContext.createExternalTable(String, String, StructType, Map<String, String>)
+use sparkSession.catalog.createTable instead. Since 2.2.0.
+org.apache.spark.sql.SQLContext.createExternalTable(String, String, StructType, Map<String, String>)
+use sparkSession.catalog.createTable instead. Since 2.2.0.
+org.apache.spark.sql.catalog.Catalog.createExternalTable(String, String, StructType, Map<String, String>)
+use createTable instead. Since 2.2.0.
+org.apache.spark.sql.catalog.Catalog.createExternalTable(String, String, StructType, Map<String, String>)
+use createTable instead. Since 2.2.0.
+org.apache.spark.sql.Dataset.explode(Seq<Column>, Function1<Row, TraversableOnce<A>>, TypeTags.TypeTag<A>)
+use flatMap() or select() with functions.explode() instead. Since 2.0.0.
+org.apache.spark.sql.Dataset.explode(String, String, Function1<A, TraversableOnce<B>>, TypeTags.TypeTag<B>)
+use flatMap() or select() with functions.explode() instead. Since 2.0.0.
+org.apache.spark.sql.SQLContext.getOrCreate(SparkContext)
+Use SparkSession.builder instead. Since 2.0.0.
+org.apache.spark.status.api.v1.ExecutorSummary.isBlacklisted()
+use isExcluded instead. Since 3.1.0.
+org.apache.spark.status.api.v1.ExecutorStageSummary.isBlacklistedForStage()
+use isExcludedForStage instead. Since 3.1.0.
+org.apache.spark.sql.SQLContext.jdbc(String, String)
+As of 1.4.0, replaced by read().jdbc().
+org.apache.spark.sql.SQLContext.jdbc(String, String, String[])
+As of 1.4.0, replaced by read().jdbc().
+org.apache.spark.sql.SQLContext.jdbc(String, String, String, long, long, int)
+As of 1.4.0, replaced by read().jdbc().
+org.apache.spark.sql.DataFrameReader.json(JavaRDD<String>)
+Use json(Dataset[String]) instead. Since 2.2.0.
+org.apache.spark.sql.DataFrameReader.json(RDD<String>)
+Use json(Dataset[String]) instead. Since 2.2.0.
+org.apache.spark.sql.SQLContext.jsonFile(String)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonFile(String, double)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonFile(String, StructType)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonRDD(JavaRDD<String>)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonRDD(JavaRDD<String>, double)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonRDD(JavaRDD<String>, StructType)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonRDD(RDD<String>)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonRDD(RDD<String>, double)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.sql.SQLContext.jsonRDD(RDD<String>, StructType)
+As of 1.4.0, replaced by read().json().
+org.apache.spark.ml.feature.StringIndexerModel.labels()
+`labels` is deprecated and will be removed in 3.1.0. Use `labelsArray` instead. Since 3.0.0.
+org.apache.spark.sql.SQLContext.load(String)
+As of 1.4.0, replaced by read().load(path).
+org.apache.spark.sql.SQLContext.load(String, Map<String, String>)
+As of 1.4.0, replaced by read().format(source).options(options).load().
+org.apache.spark.sql.SQLContext.load(String, Map<String, String>)
+As of 1.4.0, replaced by read().format(source).options(options).load().
+org.apache.spark.sql.SQLContext.load(String, String)
+As of 1.4.0, replaced by read().format(source).load(path).
+org.apache.spark.sql.SQLContext.load(String, StructType, Map<String, String>)
+As of 1.4.0, replaced by read().format(source).schema(schema).options(options).load().
+org.apache.spark.sql.SQLContext.load(String, StructType, Map<String, String>)
+As of 1.4.0, replaced by read().format(source).schema(schema).options(options).load().
+org.apache.spark.sql.functions.monotonicallyIncreasingId()
+Use monotonically_increasing_id(). Since 2.0.0.
+org.apache.spark.sql.SQLImplicits.newBooleanSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newByteSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newDoubleSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newFloatSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newIntSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newLongSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newProductSeqEncoder(TypeTags.TypeTag<A>)
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newShortSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.sql.SQLImplicits.newStringSeqEncoder()
+use newSequenceEncoder
+org.apache.spark.scheduler.SparkListenerInterface.onExecutorBlacklisted(SparkListenerExecutorBlacklisted)
+use onExecutorExcluded instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerInterface.onExecutorBlacklistedForStage(SparkListenerExecutorBlacklistedForStage)
+use onExecutorExcludedForStage instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerInterface.onExecutorUnblacklisted(SparkListenerExecutorUnblacklisted)
+use onExecutorUnexcluded instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerInterface.onNodeBlacklisted(SparkListenerNodeBlacklisted)
+use onNodeExcluded instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerInterface.onNodeBlacklistedForStage(SparkListenerNodeBlacklistedForStage)
+use onNodeExcludedForStage instead. Since 3.1.0.
+org.apache.spark.scheduler.SparkListenerInterface.onNodeUnblacklisted(SparkListenerNodeUnblacklisted)
+use onNodeUnexcluded instead. Since 3.1.0.
+org.apache.spark.sql.SQLContext.parquetFile(Seq<String>)
+Use read.parquet() instead. Since 1.4.0.
+org.apache.spark.sql.SQLContext.parquetFile(String...)
+As of 1.4.0, replaced by read().parquet().
+org.apache.spark.sql.UDFRegistration.register(String, UserDefinedAggregateFunction)
+this method and the use of UserDefinedAggregateFunction are deprecated. Aggregator[IN, BUF, OUT] should now be registered as a UDF via the functions.udaf(agg) method.
+org.apache.spark.sql.Dataset.registerTempTable(String)
+Use createOrReplaceTempView(viewName) instead. Since 2.0.0.
+org.apache.spark.sql.SQLContext.setActive(SQLContext)
+Use SparkSession.setActiveSession instead. Since 2.0.0.
+org.apache.spark.sql.functions.shiftLeft(Column, int)
+Use shiftleft. Since 3.2.0.
+org.apache.spark.sql.functions.shiftRight(Column, int)
+Use shiftright. Since 3.2.0.
+org.apache.spark.sql.functions.shiftRightUnsigned(Column, int)
+Use shiftrightunsigned. Since 3.2.0.
+org.apache.spark.sql.functions.sumDistinct(Column)
+Use sum_distinct. Since 3.2.0.
+org.apache.spark.sql.functions.sumDistinct(String)
+Use sum_distinct. Since 3.2.0.
+org.apache.spark.sql.functions.toDegrees(Column)
+Use degrees. Since 2.1.0.
+org.apache.spark.sql.functions.toDegrees(String)
+Use degrees. Since 2.1.0.
+org.apache.spark.sql.functions.toRadians(Column)
+Use radians. Since 2.1.0.
+org.apache.spark.sql.functions.toRadians(String)
+Use radians. Since 2.1.0.
+org.apache.spark.sql.functions.udf(Object, DataType)
+Scala `udf` method with return type parameter is deprecated. Please use Scala `udf` method without return type parameter. Since 3.0.0.
+Deprecated Constructors
+Constructor and Description
+org.apache.spark.sql.SQLContext(JavaSparkContext)
+Use SparkSession.builder instead. Since 2.0.0.
+org.apache.spark.sql.SQLContext(SparkContext)
+Use SparkSession.builder instead. Since 2.0.0.
